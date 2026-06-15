@@ -4,7 +4,8 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
 // Set worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+import workerSrc from "pdfjs-dist/build/pdf.worker?url";
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 export default function PDFViewer({
   fileUrl,

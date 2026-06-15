@@ -6,8 +6,8 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { getDocByToken, signViaToken } from "../api/share";
 import { signerReject } from "../api/status";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
+import workerSrc from "pdfjs-dist/build/pdf.worker?url";
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 export default function Sign() {
   const { token } = useParams();
   const navigate = useNavigate();
