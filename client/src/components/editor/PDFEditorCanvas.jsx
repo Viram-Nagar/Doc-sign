@@ -247,7 +247,10 @@ export default function PDFEditorCanvas({
                 setPdfLoading(false);
                 if (onTotalPages) onTotalPages(numPages);
               }}
-              onLoadError={() => setPdfLoading(false)}
+              onLoadError={(error) => {
+                console.error("PDF Load Error:", error);
+                setPdfLoading(false);
+              }}
               loading={null}
             >
               <Page
