@@ -149,6 +149,8 @@ const getDocByToken = async (req, res) => {
 // ─── SIGN VIA TOKEN (public route) ───────────────────────
 const signViaToken = async (req, res) => {
   try {
+    console.log("SIGN CONTROLLER HIT");
+    console.log("TOKEN:", req.params.token);
     const { token } = req.params;
     const { signatureId, signatureDataUrl, signerName } = req.body;
 
@@ -167,11 +169,21 @@ const signViaToken = async (req, res) => {
     }
 
     // Verify signature field belongs to this document
+    console.log("signatureId:", signatureId);
+    console.log("document._id:", document._id);
+    // const signature = await Signature.findOne({
+    //   _id: signatureId,
+    //   documentId: document._id,
+    //   status: "placed",
+    // });
     const signature = await Signature.findOne({
       _id: signatureId,
       documentId: document._id,
-      status: "placed",
     });
+
+    console.log(signature);
+
+    console.log("FOUND SIGNATURE:", signature);
 
     if (!signature) {
       return res.status(404).json({ message: "Signature field not found" });
@@ -186,6 +198,15 @@ const signViaToken = async (req, res) => {
     signature.signerEmail = document.signerEmail;
     await signature.save();
 
+    // Check if ALL fields on doc are now signed
+    const allFields = await Signature.find({ documentId: document._id });
+    const allSigned = allFields.every((f) => f.status === "signed");
+
+    if (allSigned) {
+      document.status = "signed";
+      await document.save();
+    }
+
     await logAudit({
       documentId: document._id,
       userId: null,
@@ -199,15 +220,6 @@ const signViaToken = async (req, res) => {
         documentFullySigned: allSigned,
       },
     });
-
-    // Check if ALL fields on doc are now signed
-    const allFields = await Signature.find({ documentId: document._id });
-    const allSigned = allFields.every((f) => f.status === "signed");
-
-    if (allSigned) {
-      document.status = "signed";
-      await document.save();
-    }
 
     res.status(200).json({
       message: "Signature applied successfully",

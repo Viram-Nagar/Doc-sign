@@ -5,6 +5,11 @@ const connectDB = require("./config/db");
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log(req.method, req.originalUrl);
+  next();
+});
+
 // ── Connect DB ───────────────────────────────────────────
 connectDB();
 

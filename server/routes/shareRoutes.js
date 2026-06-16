@@ -7,6 +7,8 @@ const {
 } = require("../controllers/shareController");
 const { protect } = require("../middleware/authMiddleware");
 
+console.log("shareRoutes loaded");
+
 // Protected — doc owner generates the link
 router.post("/docs/:id/share", protect, generateShareLink);
 

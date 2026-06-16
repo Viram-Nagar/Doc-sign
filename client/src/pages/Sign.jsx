@@ -1,4 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+console.count("SIGN PAGE RENDER");
+console.count("SIGN COMPONENT");
+
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
@@ -39,6 +42,26 @@ export default function Sign() {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
 
+  useEffect(() => {
+    console.log("fileUrl changed");
+  }, [fileUrl]);
+
+  useEffect(() => {
+    console.log("dims changed", dims);
+  }, [dims]);
+
+  useEffect(() => {
+    console.log("currentPage changed", currentPage);
+  }, [currentPage]);
+
+  useEffect(() => {
+    console.log("scale changed", scale);
+  }, [scale]);
+
+  useEffect(() => {
+    console.log("signatures changed");
+  }, [signatures]);
+
   // ── Load document via token ──────────────────────────────
   useEffect(() => {
     const load = async () => {
@@ -59,11 +82,29 @@ export default function Sign() {
   }, [token]);
 
   // ── Measure PDF container ────────────────────────────────
-  const measureContainer = () => {
+  // const measureContainer = () => {
+  //   console.count("SIGN PAGE RENDER");
+  //   if (!containerRef.current) return;
+  //   const rect = containerRef.current.getBoundingClientRect();
+  //   setDims({ width: rect.width, height: rect.height });
+  // };
+
+  const measureContainer = useCallback(() => {
     if (!containerRef.current) return;
+
     const rect = containerRef.current.getBoundingClientRect();
-    setDims({ width: rect.width, height: rect.height });
-  };
+
+    setDims((prev) => {
+      if (prev.width === rect.width && prev.height === rect.height) {
+        return prev;
+      }
+
+      return {
+        width: rect.width,
+        height: rect.height,
+      };
+    });
+  }, []);
 
   // ── Canvas setup ─────────────────────────────────────────
   const initCanvas = () => {
@@ -177,6 +218,17 @@ export default function Sign() {
   };
 
   const pageSignatures = signatures.filter((s) => s.page === currentPage);
+
+  const pdfFile = useMemo(() => {
+    if (!fileUrl) return null;
+
+    return {
+      url: fileUrl,
+      httpHeaders: {
+        "Cache-Control": "no-cache",
+      },
+    };
+  }, [fileUrl]);
 
   // ── Loading ──────────────────────────────────────────────
   if (loading) {
@@ -649,10 +701,7 @@ export default function Sign() {
               }}
             >
               <Document
-                file={{
-                  url: fileUrl,
-                  httpHeaders: { "Cache-Control": "no-cache" },
-                }}
+                file={pdfFile}
                 onLoadSuccess={({ numPages }) => setNumPages(numPages)}
                 loading={null}
               >

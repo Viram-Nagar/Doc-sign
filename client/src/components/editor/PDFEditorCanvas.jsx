@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -38,8 +38,19 @@ export default function PDFEditorCanvas({
   // Measure container after PDF renders
   const measureContainer = useCallback(() => {
     if (!containerRef.current) return;
+
     const rect = containerRef.current.getBoundingClientRect();
-    setDims({ width: rect.width, height: rect.height });
+
+    setDims((prev) => {
+      if (prev.width === rect.width && prev.height === rect.height) {
+        return prev;
+      }
+
+      return {
+        width: rect.width,
+        height: rect.height,
+      };
+    });
   }, []);
 
   useEffect(() => {
@@ -129,6 +140,16 @@ export default function PDFEditorCanvas({
   // Page signatures for current page only
   const pageSignatures = signatures.filter((s) => s.page === currentPage);
 
+  const pdfFile = useMemo(() => {
+    if (!fileUrl) return null;
+
+    return {
+      url: fileUrl,
+      httpHeaders: {
+        "Cache-Control": "no-cache",
+      },
+    };
+  }, [fileUrl]);
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* ── Toolbar ─────────────────────────────────────── */}
@@ -237,18 +258,15 @@ export default function PDFEditorCanvas({
             }}
           >
             {/* PDF Page */}
+
             <Document
-              file={{
-                url: fileUrl,
-                httpHeaders: { "Cache-Control": "no-cache" },
-              }}
-              onLoadSuccess={({ numPages }) => {
-                setNumPages(numPages);
+              file={pdfFile}
+              onLoadSuccess={(pdf) => {
+                setNumPages(pdf.numPages);
                 setPdfLoading(false);
-                if (onTotalPages) onTotalPages(numPages);
+                if (onTotalPages) onTotalPages(pdf.numPages);
               }}
               onLoadError={(error) => {
-                console.error("PDF Load Error:", error);
                 setPdfLoading(false);
               }}
               loading={null}
@@ -271,13 +289,38 @@ export default function PDFEditorCanvas({
                       fontSize: "0.85rem",
                     }}
                   >
+                    Loading page...
+                  </div>
+                }
+              />
+              {/* <Page
+                pageNumber={currentPage}
+                scale={scale}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                onLoadSuccess={() => console.log("PAGE LOADED")}
+                onRenderSuccess={() => console.log("PAGE RENDERED")}
+                onRenderError={(e) => console.error("RENDER ERROR", e)}
+                loading={
+                  <div
+                    style={{
+                      width: "595px",
+                      height: "842px",
+                      background: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--muted)",
+                      fontSize: "0.85rem",
+                    }}
+                  >
                     <span>Loading page…</span>
                   </div>
                 }
                 onRenderSuccess={() => {
                   setTimeout(measureContainer, 50); // slight delay for DOM settle
                 }}
-              />
+              /> */}
             </Document>
 
             {/* Draggable Signature Fields */}
