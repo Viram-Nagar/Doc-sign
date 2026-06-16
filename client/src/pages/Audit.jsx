@@ -352,8 +352,9 @@ export default function Audit() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/login");
-  }, [user, authLoading]);
+    if (authLoading) return;
+    if (!user) navigate("/login");
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (!user) return;

@@ -21,8 +21,9 @@ export default function Editor() {
   const [signatures, setSignatures] = useState([]);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/login");
-  }, [user, authLoading]);
+    if (authLoading) return; // ← wait for auth to finish
+    if (!user) navigate("/login");
+  }, [user, authLoading, navigate]);
 
   const loadDocument = useCallback(async () => {
     try {
